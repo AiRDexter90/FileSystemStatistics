@@ -1,27 +1,32 @@
-#include <iostream>
-#include <conio.h>
-#include <thread>
-#include <mutex>
+#include "thread_pool.h"
 
 using namespace std;
+typedef unsigned int uint;
 
-mutex m;
+thread_pool tp(2);
 
-void licz(int liczba,int watek)
+void fun1()
 {
-	for (int i = 0; i < liczba; i++)
+	for (int i = 1; i <= 100; i++)
 	{
-		m.lock();
-		cout << "W: " << watek << "    Liczba: " << i << endl;
-		m.unlock();
+		cout << "fn1: " << i << endl;
+	}
+}
+
+void fun2()
+{
+	for (int i = 1; i <= 101; i++)
+	{
+		cout << "fn2: " << "Kocham Justyne." << endl;
 	}
 }
 
 int main()
 {
-	thread w1(licz, 100, 1);
-	thread w2(licz, 100, 2);
-	w1.join();
-	w2.join();
+	{
+		tp.enqueue(fun1);
+		tp.enqueue(fun2);
+	}
+	
 	return 0;
 }
