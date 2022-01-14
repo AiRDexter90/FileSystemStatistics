@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <chrono>
 #include "thread_pool.h"
 
 using namespace std;
@@ -11,24 +12,12 @@ typedef unsigned int uint;
 typedef unsigned long int ulint;
 namespace fs = std::filesystem;
 
-thread_pool pool(2);
 
+#define NR_THREADS 4
 #define PATH_1 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem"
 #define PATH_2 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow"
 
-
-//fs::path files1{ "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem" };
-//fs::path files2{ "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow" };
-
 uint counter = 0;
-
-/*void fun()
-{
-    for (int i = 0; i < 10; i++)
-    {
-        cout << i << endl;
-    }
-}*/
 
 //fun will be used in thread
 void inspect_file(const fs::path & file)
@@ -67,8 +56,9 @@ struct dir
 };
 
 //main function, that will analyze the given path--------------------------------------
-void analyze_path(const fs::path& parent,thread_pool & tp)
+void analyze_path(const fs::path& parent)
 {
+    thread_pool tp(NR_THREADS);
     //tell which path to analyze
     {
         string s_parent_path = parent.string();
@@ -87,6 +77,11 @@ void analyze_path(const fs::path& parent,thread_pool & tp)
             //inspect_file(subpath);
             
             tp.enqueue([subpath] {
+                int max = 1000000000;
+                for (int i = 0; i < max; i++)
+                {
+                    //empty
+                }
                 string pathname = subpath.string();
                 fstream  reader;
                 string buffer;									//a kind of container for txt lines
@@ -113,7 +108,12 @@ void analyze_path(const fs::path& parent,thread_pool & tp)
 int main()
 {
     fs::path files{PATH_2};
-    analyze_path(files,pool);
-    
+    auto start_4 = chrono::steady_clock::now();
+    analyze_path(files);
+    auto stop_4 = chrono::steady_clock::now();
+
+    cout << "Number of used threads: " << NR_THREADS << endl;
+    chrono::duration<double> elapsed_time_4 = stop_4 - start_4;
+    cout << "Required time: " << elapsed_time_4.count() << endl;
     return 0;
 }
