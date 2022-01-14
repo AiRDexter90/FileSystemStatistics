@@ -3,12 +3,55 @@
 #include <functional>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include "thread_pool.h"
 
 using namespace std;
 typedef unsigned int uint;
 typedef unsigned long int ulint;
 namespace fs = std::filesystem;
+
+thread_pool pool(2);
+
+#define PATH_1 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem"
+#define PATH_2 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow"
+
+
+//fs::path files1{ "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem" };
+//fs::path files2{ "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow" };
+
+uint counter = 0;
+
+/*void fun()
+{
+    for (int i = 0; i < 10; i++)
+    {
+        cout << i << endl;
+    }
+}*/
+
+//fun will be used in thread
+void inspect_file(const fs::path & file)
+{
+    string pathname = file.string();
+    fstream  reader;
+    string buffer;									//a kind of container for txt lines
+    uint full_lines = 0, empty_lines = 0;
+
+    reader.open(pathname);
+
+        /*get consecutive lines of file count, and analyze them in the mean of words and letters number*/
+        while (!reader.eof())
+        {
+            buffer.clear();
+            getline(reader, buffer, '\n');
+            if (!buffer.empty()) full_lines++;
+            else empty_lines++;
+        }
+        cout << "Full line: " << full_lines << endl;
+        cout << "Empty line: " << empty_lines << endl;
+}
+
 
 //structure represent directory and its content
 struct dir
@@ -23,31 +66,8 @@ struct dir
     //counting totals - sum over vector
 };
 
-//vector<function<void()>>;
-uint counter = 0;
-
-fs::path files{ "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem" };
-
-//like constructor---------------------------------------------------------------
-void make_test_directory(const fs::path& parent)
-{
-    std::filesystem::create_directories(files / "dir1" / "dir2");
-    std::filesystem::create_directories(files / "dir11" / "dir12" / "dir13");
-    std::ofstream{ files / "file1.txt" };
-    std::ofstream{ files / "file2.txt" };
-    std::ofstream{ files / "dir11" / "file11.txt" };
-}
-
-//like destructor----------------------------------------------------------------
-void destroy_test_directory(const fs::path& parent)
-{
-    cout << "Remove" << endl;
-    std::filesystem::remove_all(files);                                     //remove directory created for test
-}
-
-
 //main function, that will analyze the given path--------------------------------------
-void analyze_path(const fs::path& parent)
+void analyze_path(const fs::path& parent,thread_pool & tp)
 {
     //tell which path to analyze
     {
@@ -55,8 +75,7 @@ void analyze_path(const fs::path& parent)
         cout << "Wyniki analizy katalogu: " << s_parent_path << endl;
     }
 
-    std::cout << "recursive_directory_iterator:\n";
-    for (auto const& dir_entry : std::filesystem::recursive_directory_iterator{ files })
+    for (auto const& dir_entry : std::filesystem::recursive_directory_iterator{ parent })
     {
         fs::path subpath(dir_entry.path());
         std::cout << subpath << '\n';                               //print nodes names (directories and files)        
@@ -65,6 +84,26 @@ void analyze_path(const fs::path& parent)
         else                                                                  //print info node is file and increment file counter
         {
             std::cout << "File" << '\n'; counter++;
+            //inspect_file(subpath);
+            
+            tp.enqueue([subpath] {
+                string pathname = subpath.string();
+                fstream  reader;
+                string buffer;									//a kind of container for txt lines
+                uint full_lines = 0, empty_lines = 0;
+
+                reader.open(pathname);
+
+                /*get consecutive lines of file count, and analyze them in the mean of words and letters number*/
+                while (!reader.eof())
+                {
+                    buffer.clear();
+                    getline(reader, buffer, '\n');
+                    if (!buffer.empty()) full_lines++;
+                    else empty_lines++;
+                }
+                cout << "Full line: " << full_lines << endl;
+                cout << "Empty line: " << empty_lines << endl; });
         }
     }
     cout << "There are " << counter << " files" << '\n';                    //print the result
@@ -73,11 +112,8 @@ void analyze_path(const fs::path& parent)
 
 int main()
 {
+    fs::path files{PATH_2};
+    analyze_path(files,pool);
     
-    //there are created some directories and a few files for test iterating over given directory-------------------------------------------
-    make_test_directory(files);
-    analyze_path(files);
-    destroy_test_directory(files);
-
     return 0;
 }

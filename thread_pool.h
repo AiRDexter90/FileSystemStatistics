@@ -29,5 +29,3 @@ public:
 	void enqueue(Task task);
 
 };
-
-
