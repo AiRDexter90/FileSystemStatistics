@@ -4,7 +4,6 @@ void thread_pool::start(uint t_number)
 {
 	for (int i = 1; i <= t_number; i++)
 	{
-		cout << i << " started" << endl;
 		vThreads.emplace_back(thread([=] {
 
 			while (true)
@@ -17,8 +16,8 @@ void thread_pool::start(uint t_number)
 					cond.wait(mlock, [=] { return mStopping || !qTasks.empty(); });											//sleep thread until mStoppin = true;
 
 					if (mStopping && qTasks.empty()) break;						//just break when destructor takes action
-						task = move(qTasks.front());			//we have to move, because we are going to delete the function from the queue
-						qTasks.pop();							//delete taken by the thread fun from queue
+					task = move(qTasks.front());			//we have to move, because we are going to delete the function from the queue
+					qTasks.pop();							//delete taken by the thread fun from queue
 				}
 				//end of critical section
 				task();//perform the task
