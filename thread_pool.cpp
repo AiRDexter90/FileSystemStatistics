@@ -4,7 +4,6 @@ void thread_pool::start(uint t_number)
 {
 	for (int i = 1; i <= t_number; i++)
 	{
-		cout << i << " started" << endl;
 		vThreads.emplace_back(thread([=] {
 
 			while (true)
