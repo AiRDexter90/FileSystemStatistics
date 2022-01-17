@@ -10,11 +10,7 @@
 #include "thread_pool.h"
 
 #define NR_THREADS 4
-#define PATH_1 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\FileSystem"
-#define PATH_2 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow"
-#define PATH_3 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\BibliotekaGraficznaAllegro\\allegro"
-#define PATH_4 "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\OdczytZapisPlikow\\New2"
-
+#define MY_TEST_PATH "C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest"
 
 
 using namespace std;
@@ -85,21 +81,25 @@ void counter_fun(const string & file_pathname)
         {
             C.lock();
             nr_of.empty++;
+            if (!nr_of.full) nr_of.empty = 0;
             C.unlock();
         }
     }
 }
 //-----------------------------------------------------------------------------------------------
-
+usint set_nr_of_threads(usint requested_nr_of_threads)
+{
+    //LIMITATION OF THREADS
+    if (requested_nr_of_threads < max_nr_of_threads && requested_nr_of_threads > 0) return requested_nr_of_threads; //limit as user requested
+    else if(requested_nr_of_threads <= 0) return 1;
+    else return max_nr_of_threads;
+}
 
 //--------------------------------------------------------------------------------------------------------------------------
 //MAIN FUNCTION-------------------------------------------------------------------------------------------------------------
 void analyze_path(const fs::path& parent, usint requested_nr_of_threads)
 {
-    //LIMITATION OF THREADS
-    usint used_nr_of_threads = max_nr_of_threads;
-    if (requested_nr_of_threads < max_nr_of_threads && requested_nr_of_threads!=0) used_nr_of_threads = requested_nr_of_threads; //limit as user requested
-
+    usint used_nr_of_threads = set_nr_of_threads(requested_nr_of_threads);
     //CONSTRUCTION OF THREAD POOL
     thread_pool tp(used_nr_of_threads);
 
@@ -130,11 +130,65 @@ void analyze_path(const fs::path& parent, usint requested_nr_of_threads)
 
 }
 
+//------------------------------------------TESTS-----------------------------------------------------
+TEST(ThreadLimits, ThreadLimitExceeded)
+{
+    ASSERT_TRUE(set_nr_of_threads(-23) <= max_nr_of_threads);
+    ASSERT_TRUE(set_nr_of_threads(0) <= max_nr_of_threads);
+    ASSERT_TRUE(set_nr_of_threads(2) <= max_nr_of_threads);
+    ASSERT_TRUE(set_nr_of_threads(765753) <= max_nr_of_threads);
+}
+TEST(CountingFilesTest,EmptyDirectoryTest)
+{
+    nr_of = { 0,0,0,0,0,0,0 };
+    analyze_path("C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest\\Empty",4);
+    EXPECT_EQ(nr_of.dirs, 0);
+    EXPECT_EQ(nr_of.files, 0);
+}
+
+TEST(CountingFilesTest,TestRecursiveDirectory)
+{
+    nr_of = { 0,0,0,0,0,0,0 };
+    analyze_path("C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest", 4);
+    EXPECT_EQ(nr_of.dirs, 12);
+    EXPECT_EQ(nr_of.files, 11);
+}
+
+TEST(CountingInFileTest, EmptyFileTest)
+{
+    nr_of = { 0,0,0,0,0,0,0 };
+    counter_fun("C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest\\TestFiles\\Empty.txt");
+    EXPECT_EQ(nr_of.empty,0);
+    EXPECT_EQ(nr_of.full,0);
+    EXPECT_EQ(nr_of.letters,0);
+    EXPECT_EQ(nr_of.words,0);
+}
+
+TEST(CountingInFileTest,BigFileOnlyWords)
+{
+    nr_of = { 0,0,0,0,0,0,0 };
+    counter_fun("C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest\\TestFiles\\LoremIpsum10K_Words.txt");
+    EXPECT_EQ(nr_of.empty, 113);
+    EXPECT_EQ(nr_of.full, 114);
+    EXPECT_EQ(nr_of.letters, 55683);
+    EXPECT_EQ(nr_of.words, 10000);
+}
+
+TEST(CountingInFileTest, MixedNumbersWords)
+{
+    nr_of = { 0,0,0,0,0,0,0 };
+    counter_fun("C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest\\TestFiles\\MixedWordsAndNumbers.txt");
+    EXPECT_EQ(nr_of.empty, 1);
+    EXPECT_EQ(nr_of.full, 4);
+    EXPECT_EQ(nr_of.letters, 74);
+    EXPECT_EQ(nr_of.words, 18);
+}
+
 int main()
 {
     //................EXAMPLE PART OF PROGRAM TO SHOW IMACT OF THE NUMBER OF USED THREADS.....................................
 
-    fs::path files{"C:\\Users\\Piotr\\Desktop\\PROGRAMOWANIE\\C++\\DirectoriesTest"};
+  /*  fs::path files{MY_TEST_PATH};
     
     cout << "Maximum numberof threads to use: " << max_nr_of_threads<<endl;
     cout << "Test on directory \"DirectoriesTest\"" << endl;
@@ -158,8 +212,11 @@ int main()
     cout << nr_of.empty << " empty lines" << '\n';
     cout << nr_of.words << " words" << '\n';
     cout << nr_of.letters << " letters" << '\n';
+    */
 
-
+    //................TESTING PART OF PROGRAM.....................................
+    testing::InitGoogleTest();
+    RUN_ALL_TESTS();
 
     return 0;
 }
