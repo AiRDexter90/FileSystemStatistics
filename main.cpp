@@ -140,11 +140,12 @@ void analyze_path(const fs::path& parent, usint requested_nr_of_threads)
 //***********************************************MAIN FUNCTION*****************************************************************
 int main()
 {
-    //................EXAMPLE PART OF PROGRAM TO SHOW IMACT OF THE NUMBER OF USED THREADS.....................................
-
-    //given path to analyze
-    fs::path files{MY_TEST_PATH};
+    //................EXAMPLE PART OF PROGRAM TO SHOW IMPACT OF THE NUMBER OF USED THREADS.....................................
     
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    fs::path files{MY_TEST_PATH}; //PLACE WHERE YOU CAN ENTER YOUR OWN PATH INSTEAD OF MY_TEST_PATH
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     cout << "Maximum number of threads to use: " << max_nr_of_threads<<endl;
     cout << "Tested directory: \"DirectoriesTest\"" << endl;
     
