@@ -11,21 +11,21 @@ using namespace std;
 typedef unsigned int uint;
 using Task = function<void()>;
 
+//CLASS THREAD_POOL********************************************************************************
 class thread_pool
 {
 private:
-	bool mStopping = false;
-	vector<thread> vThreads;
-	mutex M;
-	condition_variable cond;
-	queue<function<void()>> qTasks;
+	bool mStopping = false;//flag to stop threads
+	vector<thread> vThreads;//vector of threads
+	mutex M;//to guard critical sections
+	condition_variable cond;//decides when to bind a task to a thread
+	queue<function<void()>> qTasks;//queue of tasks to do by idle threads
 
-
-	void start(uint t_number);
-	void stop();
+	
+	void start(uint t_number);//activates given numbe of threads
+	void stop();//deactivates threads
 public:
-	thread_pool(uint t_number = thread::hardware_concurrency());
-	~thread_pool();
-	void enqueue(Task task);
-
+	thread_pool(uint t_number = thread::hardware_concurrency()); //constructor
+	~thread_pool();//destructor
+	void enqueue(Task task);//add new tasks to the queue
 };
